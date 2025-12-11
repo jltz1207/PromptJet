@@ -1,12 +1,12 @@
 import User from '../src/models/user.js';
-import bcrupt from 'bcryptjs';
+import bcryptjs from 'bcryptjs';
 // Seed data
 const seedUsers = [
   {
     name: 'John Doe',
     email: 'john.doe@example.com',
     password: 'password123',
-    age: 28,
+    birth: new Date('1990-05-15'),
     role: 'user',
     isActive: true
   },
@@ -14,7 +14,7 @@ const seedUsers = [
     name: 'Jane Smith',
     email: 'jane.smith@example.com',
     password: 'password123',
-    age: 32,
+    birth: new Date('1990-05-15'),
     role: 'admin',
     isActive: true
   },
@@ -29,12 +29,12 @@ const createSeedUsers = async () => {
       return;
     }
     const hashedUsers = await Promise.all(seedUsers.map(async (seedUser) => {
-      const hashedpwd = await bcrupt.hash(seedUser.password, 10);
+      const hashedpwd = await bcryptjs.hash(seedUser.password, 10);
       return {
         ...seedUser, password: hashedpwd
       }
     }))
-    
+
     await User.insertMany(hashedUsers);
     console.log('Seed users are created successfully: ', hashedUsers);
   }

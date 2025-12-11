@@ -1,12 +1,13 @@
 import express from 'express'
-import userRouter from './src/routes/user.js'
-import indexRouter from './src/routes/index.js'
+import userRouter from './src/api/routes/user.js'
+import indexRouter from './src/api/routes/index.js'
 import connectDB from './src/config/database.js'
 import dotenv from 'dotenv'
 import {seedUsers, createSeedUsers} from './scripts/seed.js'
 dotenv.config()
 const app = express()
-
+app.use(express.json());
+app.use(express.urlencoded({extended:true}))
 app.use('/api/user', userRouter)
 app.use('/', indexRouter)
 
@@ -17,7 +18,7 @@ app.get('/error', (req, res) => {
 
 connectDB(); //connect to database
 
-// createSeedUsers(); //seed
+createSeedUsers(); //seed
 
 // start server
 app.listen(3000, () => {

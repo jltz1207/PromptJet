@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 
 // Define Schema
- const userSchema = new mongoose.Schema({
+const userSchema = new mongoose.Schema({
   name: {
     type: String,
     required: [true, 'Name is required'],
@@ -21,10 +21,16 @@ import mongoose from 'mongoose';
     minlength: [6, 'Password must be at least 6 characters'],
     select: false // Won't be returned in queries by default
   },
-  age: {
-    type: Number,
-    min: [18, 'Age must be at least 18'],
-    max: [120, 'Age cannot exceed 120']
+  birth: {
+    type: Date,
+    required: [true, 'Birth date is required'],
+    validate: {
+      validator: function (value) {
+        // Birth date shouldn't be in the future
+        return value <= new Date();
+      },
+      message: 'Birth date cannot be in the future'
+    }
   },
   role: {
     type: String,
@@ -34,10 +40,51 @@ import mongoose from 'mongoose';
   isActive: {
     type: Boolean,
     default: true
+  },
+  profileImageUrl: {
+    type: String,
+    default: null
+  },
+  lastLogin: {
+    type: Date,
+    default: null
+  },
+  resetPasswordToken: String,
+  resetPasswordExpire: Date,
+  emailVerified: {
+    type: Boolean,
+    default: false
+  },
+  verificationToken: String,
+  preferences: {
+    theme: {
+      type: String,
+      enum: ['light', 'dark'],
+      default: 'light'
+    },
+    language: {
+      type: String,
+      enum: ['en', 'zh-cn', 'zh-tw', 'es', 'fr', 'de'],
+      default: 'en'
+    },
+    notifications: {
+      email: { type: Boolean, default: true },
+      push: { type: Boolean, default: true }, // direct on devices
+    },
   }
 }, {
-  timestamps: true // Adds createdAt and updatedAt automatically
+  timestamps: true, // Adds createdAt and updatedAt automatically
+  toJSON: { virtuals: true }, // include virtuals when data is output as JSON
+  toObject: { virtuals: true } // include virtuals when data is output as Object
 });
 
-const User = mongoose.model('User', userSchema); 
+// Virtual for age
+userSchema.virtual('age').get(function(){ //callback func
+  if (!this.birth) return null;
+  const ageDifMs = Date.now() - this.birth.getTime();
+  const ageDate = new Date(ageDifMs);
+  return Math.abs(ageDate.getUTCFullYear() - 1970);
+})
+
+const User = mongoose.model('User', userSchema);
 export default User
