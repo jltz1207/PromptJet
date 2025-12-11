@@ -17,7 +17,7 @@ class UserController {
 
     register = async (req, res) => {
         try {
-
+            return res.json(await userService.register(req))
         }
         catch (e) {
             console.log(e)

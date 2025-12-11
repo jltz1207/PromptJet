@@ -5,7 +5,7 @@ import dotenv from 'dotenv'
 import jwtService from './jwtService.js'
 import User from '../models/user.js'
 import commonService from './commonService.js'
-import userActivityLogSchema from '../models/userActivityLog.js'
+import userActivityLog from '../models/userActivityLog.js'
 
 class UserService {
     getAllUsers = async () => {
@@ -13,26 +13,32 @@ class UserService {
     }
 
     login = async (req) => {
+        // validation email and password
+        if (!req.body.email || !req.body.password) {
+            return { success: false, message: "Email and password are required" }
+        }
+
         const user = await Users.findOne({ email: req.body.email.trim() }).select('+password')
         const userLog = {
-            userId: user._id,
+            userId: user ? user._id : null,
+            email: req.body.email,
             activityType: 'login',
             timestamp: commonService.currentHKT(),
             metadata: {
                 ipAddress: req.ip,
-                device: { platform: req.headers['user-agent'] || 'Unknown'  }
+                device: { platform: req.headers['user-agent'] || 'Unknown' }
             }
         }
-         if (user === null) {
-            Users.create(
-                {...userLog, isSuccess: false, description: 'Failed login attempt due to incorrect email' }
+        if (user === null) {
+            userActivityLog.create(
+                { ...userLog, isSuccess: false, description: 'Failed login attempt due to incorrect email' }
             )
-            return { result: true, message: "Incorrect email" }
+            return { success: false, message: "Incorrect email" }
         }
-       
+
         const isPasswordValid = await bcrypt.compare(req.body.password, user.password)
         if (!isPasswordValid) {
-            await userActivityLogSchema.create(
+            await userActivityLog.create(
                 { ...userLog, isSuccess: false, description: 'Failed login attempt due to incorrect password' }
             )
             return { success: false, message: "Incorrect password" }
@@ -45,29 +51,53 @@ class UserService {
         )
         return {
             result: true,
-            message: "Success login",
+            message: "Success login attempt",
             token: token
         }
     }
 
-    register = async (body) => {
-        const existUser = await Users.findOne({ email: body.email.trim() })
+    register = async (req) => {
+        //check for mandatory fields
+        if (!req.body.name || !req.body.email || !req.body.password || !req.body.birth) {
+            return { success: false, message: "Name, email, password and birth date are required" }
+        }
+
+        const userLog = {
+            userId: null,
+            email: req.body.email,
+            activityType: 'register',
+            timestamp: commonService.currentHKT(),
+            metadata: {
+                ipAddress: req.ip,
+                device: { platform: req.headers['user-agent'] || 'Unknown' }
+            }
+        }
+        const existUser = await Users.findOne({ email: req.body.email.trim() })
         if (existUser) {
+            userActivityLog.create(
+                { ...userLog, isSuccess: false, description: "Email already in use" }
+            )
             return { success: false, message: "Email already in use" }
         }
-        const hashedpwd = await bcrypt.hash(body.password, 10);
+        const hashedpwd = await bcrypt.hash(req.body.password, 10);
         const newUser = new Users({
-            name: body.name,
-            email: body.email,
+            name: req.body.name,
+            email: req.body.email,
             password: hashedpwd,
-            age: body.age,
-            role: body.role,
-            isActive: body.isActive,
+            birth: req.body.birth,
+            role: req.body.role,
+            isActive: true,
             lastLogin: commonService.currentHKT()
         })
         await newUser.save()
-        const token = jwtService.createToken(body)
-        return { success: true, message: "User registered successfully", token: token }
+
+
+        userActivityLog.create(
+            { ...userLog, userId: newUser._id, isSuccess: true, description: "Success register attempt" }
+        )
+
+        const token = jwtService.createToken({userId: newUser._id, email: req.body.email})
+        return { success: true, message: "Success register attempt", token: token }
     }
 }
 const userService = new UserService()

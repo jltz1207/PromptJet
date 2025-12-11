@@ -2,7 +2,10 @@ import mongoose from "mongoose";
 import commonService from "../services/commonService.js";
 
 const userActivityLogSchema = new mongoose.Schema({
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'Users', required: true },
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'Users'},
+    email :{
+        type: String,
+    },
     activityType: {
         type: String,
         required: true,
