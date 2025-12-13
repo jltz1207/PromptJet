@@ -1,5 +1,6 @@
 import logoutSrc from '@/assets/images/setting/icon/logout.png';
 import SettingRow, { SettingRowProps } from '@/components/ui/setting/SettingRow';
+import { store } from '@/store/store';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { View } from 'react-native';
@@ -9,11 +10,10 @@ export default function ProfilePage() {
   const router = useRouter();
   const logout = () => {
     router.navigate('/LoginPage');
+    store.accountStore.logout()
   }
   const settingRows: SettingRowProps[] = [
-    { name: 'Logout', iconPath: logoutSrc, onClick: () => { logout();} },
-
-
+    { name: 'Logout', iconPath: logoutSrc, onClick: () => {logout() } },
   ]
 
 

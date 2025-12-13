@@ -24,9 +24,39 @@ class UserController {
         }
     }
 
-    logout = async (req, res) => {
+       
+    logout =  (req, res) => {
         try {
             return res.json({ success: true, message: "User logged out successfully" })
+        }
+        catch (e) {
+            console.log(e)
+            return res.json({ error: e, success: false })
+        }
+    }
+
+    forgot = async (req, res) =>{
+         try {
+            return res.json(await userService.forgot(req) )
+        }
+        catch (e) {
+            console.log(e)
+            return res.json({ error: e, success: false })
+        }
+    }
+
+    forgot_submitCode = async (req,res) =>{
+        try{
+            return res.json(await userService.forgot_submitCode(req))
+        }
+        catch (e) {
+            console.log(e)
+            return res.json({ error: e, success: false })
+        }
+    }
+    forgot_submitPassword = async (req,res) =>{
+        try{
+            return res.json(await userService.forgot_submitPassword(req))
         }
         catch (e) {
             console.log(e)

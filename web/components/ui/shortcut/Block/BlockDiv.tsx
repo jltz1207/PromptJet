@@ -1,4 +1,4 @@
-import React from 'react'; //rfcp
+import React from 'react'; //rne
 import { Image, Text, View } from 'react-native';
 import tw from 'twrnc';
 import ThreeDotButton, { ThreeDotButtonProps } from '../../button/ThreeDotButton';

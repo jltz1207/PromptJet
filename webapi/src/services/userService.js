@@ -4,9 +4,10 @@ import jwt from 'jsonwebtoken'
 import dotenv from 'dotenv'
 import jwtService from './jwtService.js'
 import User from '../models/user.js'
-import commonService from './commonService.js'
 import userActivityLog from '../models/userActivityLog.js'
-
+import emailService from './emailService.js'
+import timeUtils from '../utils/timeUtils.js'
+import verification from '../utils/verification.js'
 class UserService {
     getAllUsers = async () => {
         return await Users.find()
@@ -23,7 +24,7 @@ class UserService {
             userId: user ? user._id : null,
             email: req.body.email,
             activityType: 'login',
-            timestamp: commonService.currentHKT(),
+            timestamp: timeUtils.currentHKT(),
             metadata: {
                 ipAddress: req.ip,
                 device: { platform: req.headers['user-agent'] || 'Unknown' }
@@ -33,7 +34,7 @@ class UserService {
             userActivityLog.create(
                 { ...userLog, isSuccess: false, description: 'Failed login attempt due to incorrect email' }
             )
-            return { success: false, message: "Incorrect email" }
+            return { success: false, message: "Please enter the correct email" }
         }
 
         const isPasswordValid = await bcrypt.compare(req.body.password, user.password)
@@ -41,18 +42,27 @@ class UserService {
             await userActivityLog.create(
                 { ...userLog, isSuccess: false, description: 'Failed login attempt due to incorrect password' }
             )
-            return { success: false, message: "Incorrect password" }
+            return { success: false, message: "Please enter the correct password" }
         }
         const token = jwtService.createToken(user)
-        user.lastLogin = commonService.currentHKT()
+        user.lastLogin = timeUtils.currentHKT()
         await user.save()
-        await userActivityLogSchema.create(
+        await userActivityLog.create(
             { ...userLog, isSuccess: true, description: 'Success login attempt' }
         )
+        const resultUser = {
+            email: user.email,
+            name: user.name,
+            birth: user.birth,
+            token: token,
+            profileImageUrl: user.profileImageUrl,
+            preference: user.preference,
+            role: user.role
+        }
         return {
-            result: true,
+            success: true,
             message: "Success login attempt",
-            token: token
+            user: resultUser
         }
     }
 
@@ -66,7 +76,7 @@ class UserService {
             userId: null,
             email: req.body.email,
             activityType: 'register',
-            timestamp: commonService.currentHKT(),
+            timestamp: timeUtils.currentHKT(),
             metadata: {
                 ipAddress: req.ip,
                 device: { platform: req.headers['user-agent'] || 'Unknown' }
@@ -87,7 +97,7 @@ class UserService {
             birth: req.body.birth,
             role: req.body.role,
             isActive: true,
-            lastLogin: commonService.currentHKT()
+            lastLogin: timeUtils.currentHKT()
         })
         await newUser.save()
 
@@ -96,9 +106,96 @@ class UserService {
             { ...userLog, userId: newUser._id, isSuccess: true, description: "Success register attempt" }
         )
 
-        const token = jwtService.createToken({userId: newUser._id, email: req.body.email})
+        const token = jwtService.createToken({ userId: newUser._id, email: req.body.email })
         return { success: true, message: "Success register attempt", token: token }
     }
+
+    forgot = async (req) => {
+        const userLog = {
+            userId: null,
+            email: req.body.email,
+            activityType: 'forgot_password',
+            timestamp: timeUtils.currentHKT(),
+            metadata: {
+                ipAddress: req.ip,
+                device: { platform: req.headers['user-agent'] || 'Unknown' }
+            }
+        }
+        if (req.body.email == null) {
+            userActivityLog.create(
+                { ...userLog, isSuccess: false, description: "No email provided" }
+            )
+            return { success: false, message: "No email provided" }
+        }
+
+        const resultUser = await Users.findOne({ email: req.body.email })
+        if (!resultUser) {
+            userActivityLog.create(
+                { ...userLog, isSuccess: false, description: "Not existed email" }
+            )
+            return { success: false, message: "Not existed email" }
+        }
+        const verifiedData = verification.generateVerficationCode(resultUser._id)
+        const mailFormat = verification.getMailFormat(verifiedData.code)
+        const mailOptions = {
+            from: process.env.EMAIL_AC,
+            to: req.body.email,
+            subject: mailFormat.subject,
+            text: mailFormat.text,
+            html: mailFormat.html
+        }
+
+        try {
+            userActivityLog.create(
+                { ...userLog, isSuccess: true, description: "Email sent successfully" }
+            )
+            await emailService.transporter.sendMail(mailOptions);
+            return { success: true, message: 'Email sent successfully' };
+        } catch (error) {
+            userActivityLog.create(
+                { ...userLog, isSuccess: false, description: "Failed to send email" }
+            )
+            console.error('Error sending email:', error);
+            return { success: true, message: 'Failed to send email' };
+        }
+    }
+
+    forgot_submitCode = async (req, res) => {
+        if (!req.body.code) {
+            return { success: false, message: "No code provided." }
+        }
+        if (!req.body.email) {
+            return { success: false, message: "No email provided." }
+        }
+        const resultUser = await Users.findOne({ email: req.body.email })
+        if (resultUser === null) {
+            return { success: false, message: `No existed email with ${req.body.email}` }
+        }
+        const verificationResult = verification.verifyCode(resultUser._id, String(req.body.code))
+        return verificationResult
+    }
+
+    forgot_submitPassword = async (req, res) => {
+        if (!req.body.email) {
+            return { success: false, message: "No Email provided" }
+        }
+        if (!req.body.password || !req.body.confirmPassword) {
+            return { success: false, message: "No Password/Confirm Password provided" }
+        }
+        if (req.body.password !== req.body.password) {
+            return { success: false, message: "Password and Confirm Password are not inconsistent" }
+        }
+        const resultUser = await Users.findOne({ email: req.body.email })
+        if (resultUser === null) {
+            return { success: false, message: `No existed email with ${req.body.email}` }
+        }
+        const newPassword = await bcrypt.hash(req.body.password, 10);
+        resultUser.password = newPassword
+        await resultUser.save()
+        return {success:true, message: 'New Password is updated'}
+    }
 }
+
+
 const userService = new UserService()
 export default userService
