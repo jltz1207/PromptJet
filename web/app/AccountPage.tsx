@@ -1,4 +1,5 @@
 import logoutSrc from '@/assets/images/setting/icon/logout.png';
+import ProfileHeader from '@/components/Account/ProfileHeader';
 import SettingRow, { SettingRowProps } from '@/components/ui/setting/SettingRow';
 import { store } from '@/store/store';
 import { useRouter } from 'expo-router';
@@ -20,8 +21,8 @@ export default function ProfilePage() {
 
 
   return (
-    <View style={tw`flex-col h-full`}>
-
+    <View style={tw`flex h-full w-full px-6`}>
+      <ProfileHeader />
       {
         settingRows.map((row, index) => (
           <SettingRow key={index} name={row.name} iconPath={row.iconPath} onClick={row.onClick} />
