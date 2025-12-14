@@ -52,7 +52,8 @@ class UserService {
         )
         const resultUser = {
             email: user.email,
-            name: user.name,
+            emailVerified: newUser.emailVerified,
+            fullName: user.fullName,
             birth: user.birth,
             token: token,
             profileImageUrl: user.profileImageUrl,
@@ -67,47 +68,92 @@ class UserService {
     }
 
     register = async (req) => {
-        //check for mandatory fields
-        if (!req.body.name || !req.body.email || !req.body.password || !req.body.birth) {
-            return { success: false, message: "Name, email, password and birth date are required" }
+        //check 
+        if (!req.body.firstName || !req.body.lastName || !req.body.password || !req.body.confirmPassword || !req.body.birth) {
+            return { success: false, message: "First Name, Last Name, Password, Confirm Password and Birth have to be provided." }
+        }
+        if (!req.body.email && !req.body.phone) {
+            return { success: false, message: "One of Email and Phone have to be provided." }
+        }
+        if (!req.body.password !== !req.body.confirmPassword) {
+            return { success: false, message: "Password and Confirm Password have to be the same." }
+        }
+        try {
+            const currentTime = timeUtils.currentHKT()
+            const userLog = {
+                userId: null,
+                email: req.body.email,
+                activityType: 'register',
+                timestamp: currentTime,
+                metadata: {
+                    ipAddress: req.ip,
+                    device: { platform: req.headers['user-agent'] || 'Unknown' }
+                }
+            }
+            const existUser = await Users.findOne({ email: req.body.email.trim() })
+            if (existUser) {
+                userActivityLog.create(
+                    { ...userLog, isSuccess: false, description: "Email already in use" }
+                )
+                return { success: false, message: "Email already in use" }
+            }
+            const hashedpwd = await bcrypt.hash(req.body.password, 10);
+            const newUser = new Users({
+                firstName: req.body.firstName,
+                lastName: req.body.lastName,
+                email: req.body.email,
+                phone: req.body.phone,
+                password: hashedpwd,
+                birth: req.body.birth,
+                isActive: true,
+                lastLogin: currentTime
+            })
+            await newUser.save()
+
+
+            userActivityLog.create(
+                { ...userLog, userId: newUser._id, isSuccess: true, description: "Success register attempt" }
+            )
+            const token = jwtService.createToken({ userId: newUser._id, email: req.body.email })
+
+            const resultUser = {
+                email: newUser.email,
+                emailVerified: newUser.emailVerified,
+                fullName: newUser.fullName,
+                birth: newUser.birth,
+                token: token,
+                profileImageUrl: newUser.profileImageUrl,
+                preference: newUser.preference,
+                role: newUser.role
+            }
+            return {
+                success: true,
+                message: "Success register attempt",
+                user: resultUser
+            }
+        }
+        catch (err) {
+            console.error(err)
+            return { success: false, message: err._message ?? "Server error happened." }
         }
 
-        const userLog = {
-            userId: null,
-            email: req.body.email,
-            activityType: 'register',
-            timestamp: timeUtils.currentHKT(),
-            metadata: {
-                ipAddress: req.ip,
-                device: { platform: req.headers['user-agent'] || 'Unknown' }
-            }
+    }
+
+    register_checkEmail = async (req) => {
+        console.log(req.body)
+        if (req.body.email === undefined || req.body.email === "") {
+            return { success: false, message: "No Email provided" }
+        }
+
+        const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        if (!isValidEmail(req.body.email)) {
+            return { success: false, message: "Incorrect Email format" }
         }
         const existUser = await Users.findOne({ email: req.body.email.trim() })
         if (existUser) {
-            userActivityLog.create(
-                { ...userLog, isSuccess: false, description: "Email already in use" }
-            )
-            return { success: false, message: "Email already in use" }
+            return { success: false, message: "The Email is existed" }
         }
-        const hashedpwd = await bcrypt.hash(req.body.password, 10);
-        const newUser = new Users({
-            name: req.body.name,
-            email: req.body.email,
-            password: hashedpwd,
-            birth: req.body.birth,
-            role: req.body.role,
-            isActive: true,
-            lastLogin: timeUtils.currentHKT()
-        })
-        await newUser.save()
-
-
-        userActivityLog.create(
-            { ...userLog, userId: newUser._id, isSuccess: true, description: "Success register attempt" }
-        )
-
-        const token = jwtService.createToken({ userId: newUser._id, email: req.body.email })
-        return { success: true, message: "Success register attempt", token: token }
+        return { success: true, message: "The Email can be used." }
     }
 
     forgot = async (req) => {
@@ -192,7 +238,7 @@ class UserService {
         const newPassword = await bcrypt.hash(req.body.password, 10);
         resultUser.password = newPassword
         await resultUser.save()
-        return {success:true, message: 'New Password is updated'}
+        return { success: true, message: 'New Password is updated' }
     }
 }
 

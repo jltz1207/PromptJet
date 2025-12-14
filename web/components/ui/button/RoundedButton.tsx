@@ -7,6 +7,7 @@ interface prop{
   title?: string |undefined
   onClick?: () => void
   px?:number
+  isCircular?:boolean
 }
 export default function RoundedButton(p: prop) {
   const classifyRounded = () =>{
@@ -32,8 +33,8 @@ export default function RoundedButton(p: prop) {
     }
   }
   return (
-    <View onTouchEnd={p.onClick} style={tw`${classifyRounded()} ${p.px!==undefined?`px-${p.px}`:'px-2'} flex-row items-center justify-center opacity-25 border-gray border `}>
-      {p.title !== undefined ? <Text>{p.title}</Text> : null }
+    <View onTouchEnd={p.onClick} style={tw`${classifyRounded()} ${p.px!==undefined?`px-${p.px}`:'px-1'} ${p.isCircular?'h-6 w-6':''} flex-row items-center justify-center opacity-25 border-gray border `}>
+      {p.title !== undefined ? <Text >{p.title}</Text> : null }
      
       {p.imagePath !== undefined 
       ? <Image style={tw`h-6 w-6`} source={typeof p.imagePath === 'number' ? p.imagePath : { uri: p.imagePath }} /> 

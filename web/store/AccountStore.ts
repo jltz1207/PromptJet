@@ -29,7 +29,34 @@ export default class AccountStore {
       throw error
     }
   }
-
+  register = async (form: any) => {
+    try {
+      store.commonStore.setLoadingInitial(true)
+      const response = await agent.account.register(form)
+      runInAction(() => {
+        this.user = response.data.user as User
+        console.log(this.user)
+      })
+      store.commonStore.setLoadingInitial(false)
+      return response.data
+    }
+    catch (err) {
+      store.commonStore.setLoadingInitial(false)
+      console.error(err);
+    }
+  }
+  register_checkEmail = async (email: string) => {
+    try {
+      store.commonStore.setLoadingInitial(true)
+      const response = await agent.account.register_checkEmail(email)
+      store.commonStore.setLoadingInitial(false)
+      return response.data
+    }
+    catch (err) {
+      store.commonStore.setLoadingInitial(false)
+      console.error(err);
+    }
+  }
   logout = () => {
     try {
       runInAction(() => {
@@ -54,7 +81,7 @@ export default class AccountStore {
       throw error
     }
   }
-  forgot_submitCode = async (model: {email: string, code:string}) => {
+  forgot_submitCode = async (model: { email: string, code: string }) => {
     try {
       store.commonStore.setLoadingInitial(true)
       const result = await agent.account.forgot_submitCode(model);

@@ -48,8 +48,8 @@ const LoginPage = () => {
           Sign in
         </Text>
       </View>
-      <InputElement title="Email" value={loginModel.email} model={loginModel} onChangeText={(text: string) => setLoginModel({ ...loginModel, email: text })} />
-      <InputElement title="Password" value={loginModel.password} model={loginModel} onChangeText={(text: string) => setLoginModel({ ...loginModel, password: text })} isSecure={true} />
+      <InputElement title="Email" value={loginModel.email} onChangeText={(text: string) => setLoginModel({ ...loginModel, email: text })} />
+      <InputElement title="Password" value={loginModel.password} onChangeText={(text: string) => setLoginModel({ ...loginModel, password: text })} isSecure={true} />
       <HyperlinkElement
         color="blue-700"
         position={'right'}
@@ -72,7 +72,7 @@ const LoginPage = () => {
         my={5}
         position={'center'}
         text={'Create a Account?'}
-        onClick={() => { }} />
+        onClick={() => {router.navigate('/RegisterPage') }} />
     </View>
   )
 }

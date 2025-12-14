@@ -27,7 +27,7 @@ export default function ShortcutHeader() {
     <View style={tw`h-16 flex-row justify-between px-4 py-2 items-center border-b border-gray-300 bg-white`}>
       <Text style={tw`text-7`}>Library</Text>
       <View style={tw`flex-row gap-2`}>
-        <RoundedButton rounded='full' title='+' px={1} onClick={() => setVisible(true)} />
+        <RoundedButton rounded='full' isCircular={true} title='+' px={1} onClick={() => setVisible(true)} />
         <RoundedButton rounded='lg' title='Edit' px={3} />
       </View>
       <PopupWindow jsx={jsxContent} isVisible={isVisible} setVisible={setVisible} />

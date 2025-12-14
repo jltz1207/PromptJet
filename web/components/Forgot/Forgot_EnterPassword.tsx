@@ -1,6 +1,7 @@
 import successSrc from '@/assets/images/account/success.png'
 import { store } from '@/store/store'
 import { useRouter } from 'expo-router'
+import { observer } from 'mobx-react-lite'
 import React, { useState } from 'react'
 import { Image, ImageSourcePropType, View } from 'react-native'
 import tw from 'twrnc'
@@ -15,7 +16,7 @@ interface prop {
   email: string
   setForgotStep: (step: '1' | '2' | '3') => void
 }
-export default function Forgot_EnterPassword(p: prop) {
+ function Forgot_EnterPassword(p: prop) {
   const [error, setError] = useState<string | undefined>(undefined)
   const [pwModel, setPwModel] = useState<any>({ email: p.email, password: "", confirmPassword: "" })
   const [success, setSuccess] = useState<boolean>(false)
@@ -61,8 +62,8 @@ export default function Forgot_EnterPassword(p: prop) {
     <View style={tw`w-full h-full flex flex-col justify-center  gap-4 `}>
       <HighlightHeader title={'Reset Password'} position={'center'} />
       <DescriptionText text={'Enter your new password. Remember this time!'} position={'center'} />
-      <InputElement title="Password" value={pwModel.password} model={pwModel} onChangeText={(text: string) => setPwModel({ ...pwModel, password: text })} isSecure={true} />
-      <InputElement title="Confirm Password" value={pwModel.confirmPassword} model={pwModel} onChangeText={(text: string) => setPwModel({ ...pwModel, confirmPassword: text })} isSecure={true} />
+      <InputElement title="Password" value={pwModel.password}  onChangeText={(text: string) => setPwModel({ ...pwModel, password: text })} isSecure={true} />
+      <InputElement title="Confirm Password" value={pwModel.confirmPassword} onChangeText={(text: string) => setPwModel({ ...pwModel, confirmPassword: text })} isSecure={true} />
 
       <LoginButton text={'Submit'}
         onClick={handleSubmit} />
@@ -77,4 +78,5 @@ export default function Forgot_EnterPassword(p: prop) {
   )
 
 }
+export default observer(Forgot_EnterPassword)
 

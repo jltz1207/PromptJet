@@ -2,18 +2,28 @@ import mongoose from 'mongoose';
 
 // Define Schema
 const userSchema = new mongoose.Schema({
-  name: {
+  firstName:{
     type: String,
-    required: [true, 'Name is required'],
+    required: [true, 'First name is required'],
     trim: true,
-    maxlength: [50, 'Name cannot exceed 50 characters']
+    maxlength: [50, 'First name cannot exceed 50 characters']
+  },
+  lastName:{
+    type: String,
+    type: String,
+    required: [true, 'Last name is required'],
+    trim: true,
+    maxlength: [50, 'Last name cannot exceed 50 characters']
   },
   email: {
     type: String,
-    required: [true, 'Email is required'],
     unique: true,
     lowercase: true,
     match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Please enter a valid email']
+  },
+  phone: {
+    type: String,
+    lowercase: true,
   },
   password: {
     type: String,
@@ -84,6 +94,12 @@ userSchema.virtual('age').get(function(){ //callback func
   const ageDifMs = Date.now() - this.birth.getTime();
   const ageDate = new Date(ageDifMs);
   return Math.abs(ageDate.getUTCFullYear() - 1970);
+})
+// Virtual for full name
+userSchema.virtual('fullName').get(function(){ //callback func
+  if (!this.firstName || !this.lastName) return null;
+  
+  return this.firstName + ' ' + this.lastName
 })
 
 const User = mongoose.model('User', userSchema);

@@ -23,6 +23,14 @@ class UserController {
             console.log(e)
         }
     }
+    register_checkEmail = async (req, res) => {
+        try {
+            return res.json(await userService.register_checkEmail(req))
+        }
+        catch (e) {
+            console.log(e)
+        }
+    }
 
        
     logout =  (req, res) => {

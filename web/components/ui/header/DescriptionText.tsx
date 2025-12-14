@@ -9,7 +9,7 @@ interface prop {
 export default function DescriptionText(p: prop) {
   return (
     <View style={tw`flex-row ${p.position === 'right' ? 'justify-end' : p.position === 'center' ? 'px-6 justify-center' : ''}`}>
-      <Text style={tw`text-5  text-gray-400 font-bold flex-row ${p.position === 'right' ? 'justify-end' : p.position === 'center' ? ' justify-center' : ''}`}>
+      <Text style={tw`text-4  text-gray-400 font-bold flex-row ${p.position === 'right' ? 'justify-end' : p.position === 'center' ? ' justify-center' : ''}`}>
         {p.text}
       </Text>
     </View>

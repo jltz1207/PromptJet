@@ -1,11 +1,13 @@
 import mongoose from "mongoose";
+import dotenv from 'dotenv'
 const connectDB = async () => {
+
   try {
+    if(!process.env){
+      throw new Error('.env is not imported')
+    }
     if (!process.env.DATABASE_URL) {
       throw new Error('DATABASE_URL is not defined')
-    }
-    else if(!process.env){
-      throw new Error('.env is not imported')
     }
     const options = {
       maxPoolSize: 10,

@@ -8,28 +8,33 @@ interface prop {
   value?: string,
   height?: string,
   placeholder?: string,
-  model?: any,
   isSecure?: boolean,
   onChangeText?: (text: string) => void,
+  flexGrow?: boolean
+  isNumeric?: boolean
 }
 export default function InputElement(p: prop) {
   const [isShowPassword, setIsShowPassword] = useState<boolean>(p.isSecure || false)
   return (
-    <View style={tw`flex flex-col gap-2`}>
+    <View style={tw` flex flex-col gap-2 ${p.flexGrow ? `flex-1` : ''}`}>
       {p.title != null ?
         <Text>{p.title}</Text> : ''}
-      <TextInput
-        style={tw`relative border-2 border-gray-400 w-full rounded-md pl-2`}
-        value={p.model?.value ?? p.value}
-        onChangeText={p.onChangeText}
-        placeholder={p.placeholder}
-        secureTextEntry={isShowPassword}
-      />
-      {p.isSecure &&
-        <TouchableOpacity style={tw`absolute right-2 top-9 w-6 h-6`} onPress={() => setIsShowPassword(!isShowPassword)}>
-          <Image source={visbleSrc} style={tw`w-full h-full`} />
-        </TouchableOpacity>
-      }
+      <View style={tw`relative `}>
+        <TextInput
+          style={tw`  border-2 border-gray-400 w-full rounded-md pl-2`}
+          value={p.value}
+          onChangeText={p.onChangeText}
+          placeholder={p.placeholder}
+          secureTextEntry={isShowPassword}
+          keyboardType={p.isNumeric ? 'numeric' : 'default'}
+        />
+        {p.isSecure && //absolute right-2 top-9 w-6 h-6
+          <TouchableOpacity style={tw`absolute right-2 h-full justify-center`} onPress={() => setIsShowPassword(!isShowPassword)}>
+            <Image source={visbleSrc} style={tw`w-6 h-6`} />
+          </TouchableOpacity>
+        }
+      </View>
+
     </View>
   )
 }

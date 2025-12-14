@@ -34,7 +34,7 @@ function ProfileHeader() {
       <View style={tw`ml-3 flex-1`}>
         {store.accountStore.user &&
           <View>
-            <Text style={tw`text-5`}>{store.accountStore.user.name}</Text>
+            <Text style={tw`text-5`}>{store.accountStore.user.fullName}</Text>
             <Text>{store.accountStore.user.email}</Text>
           </View>
 

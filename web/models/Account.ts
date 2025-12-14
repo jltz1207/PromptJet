@@ -18,7 +18,8 @@ export interface RegisterForm{
 
 export interface User{
   email:string
-  name:string
+    emailVerified:boolean
+  fullName:string
   birth:string
   token:string
   profileImageUrl?:string
